@@ -5,15 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>For You</title>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  html, body {
-    height: 100%;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
 
   body {
     min-height: 100vh;
@@ -52,7 +45,6 @@
     100% { background-position: 0% 50%; }
   }
 
-  /* floating hearts */
   .heart {
     position: absolute;
     bottom: -50px;
@@ -69,7 +61,6 @@
     100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
   }
 
-  /* falling tears */
   .tear {
     position: absolute;
     top: -50px;
@@ -86,7 +77,6 @@
     100% { transform: translateY(110vh); opacity: 0; }
   }
 
-  /* glowing fireflies for final screen */
   .firefly {
     position: absolute;
     width: 6px;
@@ -132,16 +122,8 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
-  .screen {
-    display: none;
-    width: 100%;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .screen.active {
-    display: flex;
-  }
+  .screen { display: none; width: 100%; flex-direction: column; align-items: center; }
+  .screen.active { display: flex; }
 
   .question {
     font-size: 25px;
@@ -166,7 +148,6 @@
     padding: 14px 34px;
     font-size: 17px;
     border-radius: 50px;
-    cursor: pointer;
     font-weight: 600;
     transition: transform 0.15s ease, box-shadow 0.2s ease, left 0.25s ease, top 0.25s ease;
   }
@@ -177,35 +158,13 @@
     box-shadow: 0 8px 20px rgba(255, 106, 136, 0.4);
   }
 
-  .no-btn {
-    background: #f0f0f0;
-    color: #555;
-  }
+  .no-btn { background: #f0f0f0; color: #555; }
+  button:hover { transform: translateY(-3px) scale(1.05); }
+  .yes-btn:hover { box-shadow: 0 12px 26px rgba(255, 106, 136, 0.55); }
 
-  button:hover {
-    transform: translateY(-3px) scale(1.05);
-  }
-
-  .yes-btn:hover {
-    box-shadow: 0 12px 26px rgba(255, 106, 136, 0.55);
-  }
-
-  #runawayWrap {
-    position: relative;
-    width: 100%;
-    height: 160px;
-  }
-
-  #runawayNo {
-    position: absolute;
-  }
-
-  #runawayYes {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-  }
+  #runawayWrap { position: relative; width: 100%; height: 160px; }
+  #runawayNo { position: absolute; }
+  #runawayYes { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 
   .subtext {
     margin-top: 16px;
@@ -214,11 +173,7 @@
     opacity: 0.85;
   }
 
-  /* Final celebration screen */
-  .final-card {
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: none;
-  }
+  .final-card { background: rgba(255, 255, 255, 0.08); box-shadow: none; }
 
   .burst-heart {
     font-size: 60px;
@@ -252,7 +207,6 @@
 
   <div class="card" id="cardEl">
 
-    <!-- Screen 1: I love you, are you okay with that -->
     <div class="screen active" id="screenLoveOk">
       <div class="question">I love you. Are you okay with that? 💗</div>
       <div class="buttons">
@@ -261,7 +215,6 @@
       </div>
     </div>
 
-    <!-- Screen 2: did I do something bad -->
     <div class="screen" id="screenDidIDoBad">
       <div class="question">Did I do something bad? 🥺</div>
       <div class="buttons">
@@ -270,7 +223,6 @@
       </div>
     </div>
 
-    <!-- Screen 3: I'm sorry (crying animation) -->
     <div class="screen" id="screenSorry">
       <div class="question">I'm sorry 😢</div>
       <div class="buttons">
@@ -279,7 +231,6 @@
       <div class="subtext">Let's start over, okay?</div>
     </div>
 
-    <!-- Screen 4: do you love me (runaway no button) -->
     <div class="screen" id="screenDoYouLoveMe">
       <div class="question">Do you love me? 💓</div>
       <div id="runawayWrap">
@@ -288,7 +239,6 @@
       </div>
     </div>
 
-    <!-- Screen 5: final celebration -->
     <div class="screen" id="screenFinal">
       <div class="burst-heart">💖</div>
       <div class="lets-go">Let's go 🥰</div>
@@ -298,7 +248,6 @@
   </div>
 
 <script>
-  // ---- Screen navigation ----
   const bodyEl = document.getElementById("bodyEl");
   const cardEl = document.getElementById("cardEl");
   let tearInterval = null;
@@ -306,17 +255,14 @@
   function goTo(screenId) {
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById(screenId).classList.add("active");
-
     bodyEl.classList.remove("sad-bg", "final-bg");
     stopTears();
-
     if (screenId === "screenSorry") {
       bodyEl.classList.add("sad-bg");
       startTears();
     }
   }
 
-  // ---- Floating hearts background (always running, subtle) ----
   function createHeart() {
     const heart = document.createElement("div");
     heart.classList.add("heart");
@@ -329,7 +275,6 @@
   }
   setInterval(createHeart, 700);
 
-  // ---- Crying tears background (only during "I'm sorry" screen) ----
   function createTear() {
     const tear = document.createElement("div");
     tear.classList.add("tear");
@@ -345,13 +290,9 @@
     tearInterval = setInterval(createTear, 300);
   }
   function stopTears() {
-    if (tearInterval) {
-      clearInterval(tearInterval);
-      tearInterval = null;
-    }
+    if (tearInterval) { clearInterval(tearInterval); tearInterval = null; }
   }
 
-  // ---- Runaway "No" button on the "Do you love me?" screen ----
   const runawayWrap = document.getElementById("runawayWrap");
   const runawayNo = document.getElementById("runawayNo");
 
@@ -361,30 +302,19 @@
     const btnH = runawayNo.offsetHeight || 50;
     const maxX = Math.max(wrapRect.width - btnW, 0);
     const maxY = Math.max(wrapRect.height - btnH, 0);
-    const x = Math.random() * maxX;
-    const y = Math.random() * maxY;
-    runawayNo.style.left = x + "px";
-    runawayNo.style.top = y + "px";
+    runawayNo.style.left = (Math.random() * maxX) + "px";
+    runawayNo.style.top = (Math.random() * maxY) + "px";
   }
 
-  function initNoPosition() {
-    runawayNo.style.left = "10px";
-    runawayNo.style.top = "0px";
-  }
-  initNoPosition();
+  runawayNo.style.left = "10px";
+  runawayNo.style.top = "0px";
 
   document.addEventListener("mousemove", (e) => {
     const activeScreen = document.getElementById("screenDoYouLoveMe");
     if (!activeScreen.classList.contains("active")) return;
-
     const rect = runawayNo.getBoundingClientRect();
-    const btnCenterX = rect.left + rect.width / 2;
-    const btnCenterY = rect.top + rect.height / 2;
-    const dist = Math.hypot(e.clientX - btnCenterX, e.clientY - btnCenterY);
-
-    if (dist < 90) {
-      placeNoRandomly();
-    }
+    const dist = Math.hypot(e.clientX - (rect.left + rect.width / 2), e.clientY - (rect.top + rect.height / 2));
+    if (dist < 90) placeNoRandomly();
   });
 
   document.addEventListener("touchmove", (e) => {
@@ -392,18 +322,11 @@
     if (!activeScreen.classList.contains("active")) return;
     const touch = e.touches[0];
     if (!touch) return;
-
     const rect = runawayNo.getBoundingClientRect();
-    const btnCenterX = rect.left + rect.width / 2;
-    const btnCenterY = rect.top + rect.height / 2;
-    const dist = Math.hypot(touch.clientX - btnCenterX, touch.clientY - btnCenterY);
-
-    if (dist < 100) {
-      placeNoRandomly();
-    }
+    const dist = Math.hypot(touch.clientX - (rect.left + rect.width / 2), touch.clientY - (rect.top + rect.height / 2));
+    if (dist < 100) placeNoRandomly();
   }, { passive: true });
 
-  // ---- Final "Let's go" celebration ----
   function handleFinalYes() {
     goTo('screenFinal');
     bodyEl.classList.add('final-bg');
