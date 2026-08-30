@@ -98,6 +98,23 @@
     100% { transform: translate(0, 0); opacity: 0.3; }
   }
 
+  /* Crying emoji burst, spawned where the No button was standing
+     right before it dodges away. */
+  .cry {
+    position: fixed;
+    font-size: 20px;
+    opacity: 0.95;
+    pointer-events: none;
+    z-index: 60;
+    animation: cryFall ease-in forwards;
+  }
+
+  @keyframes cryFall {
+    0%   { transform: translate(0, 0) scale(0.6); opacity: 0; }
+    15%  { transform: translate(var(--dx), calc(var(--dy) * 0.2)) scale(1); opacity: 1; }
+    100% { transform: translate(calc(var(--dx) * 1.6), calc(var(--dy) + 60px)) scale(0.8); opacity: 0; }
+  }
+
   .card {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
@@ -162,22 +179,26 @@
   button:hover { transform: translateY(-3px) scale(1.05); }
   .yes-btn:hover { box-shadow: 0 12px 26px rgba(255, 106, 136, 0.55); }
 
-  #runawayWrap { position: relative; width: 100%; height: 160px; }
-
-  #runawayNo {
-    position: fixed;
-    z-index: 50;
-    transition: left 0.18s ease, top 0.18s ease;
+  /* runawayWrap sits inline with Yes, so No starts right there
+     like a normal button, not off in the middle of nowhere. */
+  #runawayWrap {
+    position: relative;
+    display: inline-flex;
   }
 
-  /* Don't let hover grow/lift this one — that extra size is what
-     was pushing it past the edge when placed near a boundary. */
+  #runawayNo {
+    position: relative;
+    transition: left 0.2s ease, top 0.2s ease;
+  }
+
+  #runawayNo.escaping {
+    position: fixed;
+  }
+
   #runawayNo:hover,
   #runawayNo:focus {
     transform: none;
   }
-
-  #runawayYes { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 
   .subtext {
     margin-top: 16px;
@@ -246,9 +267,11 @@
 
     <div class="screen" id="screenDoYouLoveMe">
       <div class="question">Do you love me? 💓</div>
-      <div id="runawayWrap">
+      <div class="buttons">
         <button class="yes-btn" id="runawayYes" onclick="handleFinalYes()">Yes</button>
-        <button class="no-btn" id="runawayNo">No</button>
+        <span id="runawayWrap">
+          <button class="no-btn" id="runawayNo">No</button>
+        </span>
       </div>
     </div>
 
@@ -275,7 +298,7 @@
       startTears();
     }
     if (screenId === "screenDoYouLoveMe") {
-      placeNoInitial();
+      resetNoButton();
     }
   }
 
@@ -311,16 +334,14 @@
 
   const runawayNo = document.getElementById("runawayNo");
 
-  const TRIGGER_RADIUS = 160;
-  const MARGIN = 24; // safety padding from the screen edge
+  const TRIGGER_RADIUS = 90;   // how close before it dodges
+  const MAX_JUMP = 130;        // dodge distance — short, not screen-spanning
+  const MARGIN = 16;
 
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
   }
 
-  // Use the visual viewport when available — on mobile this reflects
-  // the actual visible area (excluding a hidden/expanding address bar),
-  // which is what was letting the button end up out of sight.
   function getViewportSize() {
     const vv = window.visualViewport;
     return {
@@ -329,63 +350,91 @@
     };
   }
 
-  function placeNoInitial() {
-    const { width, height } = getViewportSize();
-    const yesBtn = document.getElementById("runawayYes");
-    const yesRect = yesBtn.getBoundingClientRect();
-    const btnW = runawayNo.offsetWidth || 100;
-    const btnH = runawayNo.offsetHeight || 50;
-    const x = clamp(yesRect.right + 20, MARGIN, width - btnW - MARGIN);
-    const y = clamp(yesRect.top, MARGIN, height - btnH - MARGIN);
-    runawayNo.style.left = x + "px";
-    runawayNo.style.top = y + "px";
-  }
-
-  function placeNoRandomly() {
-    const { width, height } = getViewportSize();
-    const btnW = runawayNo.offsetWidth || 100;
-    const btnH = runawayNo.offsetHeight || 50;
-    const maxX = Math.max(width - btnW - MARGIN * 2, 0);
-    const maxY = Math.max(height - btnH - MARGIN * 2, 0);
-    const newX = clamp(MARGIN + Math.random() * maxX, MARGIN, width - btnW - MARGIN);
-    const newY = clamp(MARGIN + Math.random() * maxY, MARGIN, height - btnH - MARGIN);
-    runawayNo.style.left = newX + "px";
-    runawayNo.style.top = newY + "px";
+  function resetNoButton() {
+    // Put it back inline, right next to Yes, like a normal button.
+    runawayNo.classList.remove("escaping");
+    runawayNo.style.left = "";
+    runawayNo.style.top = "";
   }
 
   function isDoYouLoveMeActive() {
     return document.getElementById("screenDoYouLoveMe").classList.contains("active");
   }
 
+  function spawnCryBurst(x, y) {
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+      const cry = document.createElement("div");
+      cry.classList.add("cry");
+      cry.textContent = "😭";
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 20 + Math.random() * 40;
+      cry.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+      cry.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+      cry.style.left = x + "px";
+      cry.style.top = y + "px";
+      cry.style.animationDuration = (0.7 + Math.random() * 0.5) + "s";
+      document.body.appendChild(cry);
+      setTimeout(() => cry.remove(), 1300);
+    }
+  }
+
+  function dodge(clientX, clientY) {
+    const rect = runawayNo.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dist = Math.hypot(clientX - centerX, clientY - centerY);
+    if (dist >= TRIGGER_RADIUS) return;
+
+    // Cry emojis burst from where it currently is, right before it moves.
+    spawnCryBurst(centerX, centerY);
+
+    // Freeze current position in fixed coords, then jump a short,
+    // bounded distance away from the cursor.
+    const { width, height } = getViewportSize();
+    const btnW = rect.width;
+    const btnH = rect.height;
+
+    // Direction: away from the cursor.
+    let dx = centerX - clientX;
+    let dy = centerY - clientY;
+    const mag = Math.hypot(dx, dy) || 1;
+    dx /= mag;
+    dy /= mag;
+
+    // Add some randomness so it doesn't always flee in a straight line.
+    const angleJitter = (Math.random() - 0.5) * 1.2;
+    const cos = Math.cos(angleJitter), sin = Math.sin(angleJitter);
+    const jdx = dx * cos - dy * sin;
+    const jdy = dx * sin + dy * cos;
+
+    const jumpDist = MAX_JUMP * (0.6 + Math.random() * 0.4);
+    let newX = rect.left + jdx * jumpDist;
+    let newY = rect.top + jdy * jumpDist;
+
+    newX = clamp(newX, MARGIN, width - btnW - MARGIN);
+    newY = clamp(newY, MARGIN, height - btnH - MARGIN);
+
+    runawayNo.classList.add("escaping");
+    runawayNo.style.left = newX + "px";
+    runawayNo.style.top = newY + "px";
+  }
+
   document.addEventListener("mousemove", (e) => {
     if (!isDoYouLoveMeActive()) return;
-    const rect = runawayNo.getBoundingClientRect();
-    const dist = Math.hypot(e.clientX - (rect.left + rect.width / 2), e.clientY - (rect.top + rect.height / 2));
-    if (dist < TRIGGER_RADIUS) placeNoRandomly();
+    dodge(e.clientX, e.clientY);
   });
 
   document.addEventListener("touchmove", (e) => {
     if (!isDoYouLoveMeActive()) return;
     const touch = e.touches[0];
     if (!touch) return;
-    const rect = runawayNo.getBoundingClientRect();
-    const dist = Math.hypot(touch.clientX - (rect.left + rect.width / 2), touch.clientY - (rect.top + rect.height / 2));
-    if (dist < TRIGGER_RADIUS) placeNoRandomly();
+    dodge(touch.clientX, touch.clientY);
   }, { passive: true });
 
-  runawayNo.addEventListener("mouseenter", () => {
-    if (isDoYouLoveMeActive()) placeNoRandomly();
+  runawayNo.addEventListener("mouseenter", (e) => {
+    if (isDoYouLoveMeActive()) dodge(e.clientX, e.clientY);
   });
-
-  window.addEventListener("resize", () => {
-    if (isDoYouLoveMeActive()) placeNoRandomly();
-  });
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", () => {
-      if (isDoYouLoveMeActive()) placeNoRandomly();
-    });
-  }
 
   function handleFinalYes() {
     goTo('screenFinal');
