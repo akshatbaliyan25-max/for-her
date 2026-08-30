@@ -186,7 +186,7 @@
   </div>
 
 <script>
-  const FORM_ENDPOINT = "https://formspree.io/f/moeqjayw";
+  const FORM_ENDPOINT = "https://script.google.com/macros/s/AKfycbzUwBfF4MObw88J12ukcIaSWXGVS_hoCNPSyTU7mEDKp5aJbA3mEfPxfqRgVMLZB-U0-Q/exec";
 
   const dateInput = document.getElementById("dateInput");
   const submitBtn = document.getElementById("submitBtn");
