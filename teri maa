@@ -5,11 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>For You</title>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     min-height: 100vh;
@@ -87,9 +83,7 @@
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"><path fill="%23ff4d6d" d="M12 21s-6.7-4.35-9.3-8.28C1.02 10.36 1.4 7.4 3.6 5.6c2-1.64 4.82-1.3 6.4.5L12 8.2l2-2.1c1.58-1.8 4.4-2.14 6.4-.5 2.2 1.8 2.58 4.76.9 7.12C18.7 16.65 12 21 12 21z"/></svg>') 14 12, auto;
   }
 
-  input[type="date"]:focus {
-    border-color: #ff6a88;
-  }
+  input[type="date"]:focus { border-color: #ff6a88; }
 
   button {
     border: none;
@@ -113,11 +107,7 @@
     box-shadow: 0 12px 26px rgba(255, 106, 136, 0.55);
   }
 
-  .submit-btn:disabled {
-    opacity: 0.6;
-    cursor: default;
-    transform: none;
-  }
+  .submit-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
 
   .subtext {
     margin-top: 16px;
@@ -126,24 +116,10 @@
     opacity: 0.85;
   }
 
-  .thankyou {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .thankyou.active {
-    display: flex;
-  }
-
-  .form-view {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .form-view.hidden {
-    display: none;
-  }
+  .thankyou { display: none; flex-direction: column; align-items: center; }
+  .thankyou.active { display: flex; }
+  .form-view { display: flex; flex-direction: column; }
+  .form-view.hidden { display: none; }
 
   .big-heart {
     font-size: 55px;
@@ -186,7 +162,8 @@
   </div>
 
 <script>
-  const FORM_ENDPOINT = "https://script.google.com/macros/s/AKfycbzUwBfF4MObw88J12ukcIaSWXGVS_hoCNPSyTU7mEDKp5aJbA3mEfPxfqRgVMLZB-U0-Q/exec";
+  // Your Google Apps Script Web App URL
+  const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzUwBfF4MObw88J12ukcIaSWXGVS_hoCNPSyTU7mEDKp5aJbA3mEfPxfqRgVMLZB-U0-Q/exec";
 
   const dateInput = document.getElementById("dateInput");
   const submitBtn = document.getElementById("submitBtn");
@@ -211,28 +188,23 @@
     submitBtn.textContent = "Sending...";
 
     try {
-      const response = await fetch(FORM_ENDPOINT, {
+      // no-cors mode: Apps Script doesn't support reading the response
+      // directly from a browser fetch, so we send it and assume success
+      // once the request completes without a network error.
+      await fetch(SHEET_ENDPOINT, {
         method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ chosen_date: chosenDate })
       });
 
-      if (response.ok) {
-        const formatted = new Date(chosenDate + "T00:00:00").toLocaleDateString(undefined, {
-          weekday: "long", year: "numeric", month: "long", day: "numeric"
-        });
-        thankYouText.textContent = "It's set for " + formatted + "! 🥰";
-        formView.classList.add("hidden");
-        thankYouView.classList.add("active");
-      } else {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Confirm this date";
-        errorMsg.textContent = "Hmm, something went wrong. Try again?";
-        errorMsg.style.display = "block";
-      }
+      const formatted = new Date(chosenDate + "T00:00:00").toLocaleDateString(undefined, {
+        weekday: "long", year: "numeric", month: "long", day: "numeric"
+      });
+      thankYouText.textContent = "It's set for " + formatted + "! 🥰";
+      formView.classList.add("hidden");
+      thankYouView.classList.add("active");
+
     } catch (err) {
       submitBtn.disabled = false;
       submitBtn.textContent = "Confirm this date";
