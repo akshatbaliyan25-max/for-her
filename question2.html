@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>For You</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+    background-size: 400% 400%;
+    animation: gradientShift 12s ease infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    transition: background 0.8s ease;
+  }
+
+  body.sad-bg {
+    background: linear-gradient(-45deg, #6a85b6, #bac8e0, #8697c4, #a8bfe0);
+    background-size: 400% 400%;
+    animation: gradientShift 12s ease infinite;
+  }
+
+  body.final-bg {
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1a2980);
+    background-size: 400% 400%;
+    animation: gradientShift 14s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* floating hearts */
+  .heart {
+    position: absolute;
+    bottom: -50px;
+    font-size: 24px;
+    opacity: 0.7;
+    animation: floatUp linear infinite;
+    user-select: none;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes floatUp {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+    100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* falling tears */
+  .tear {
+    position: absolute;
+    top: -50px;
+    font-size: 22px;
+    opacity: 0.8;
+    animation: fallDown linear infinite;
+    user-select: none;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes fallDown {
+    0% { transform: translateY(0); opacity: 0.9; }
+    100% { transform: translateY(110vh); opacity: 0; }
+  }
+
+  /* twinkling stars for final screen */
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: twinkle ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
+
+  .card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 50px 40px;
+    max-width: 440px;
+    width: 90%;
+    min-height: 260px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: popIn 0.5s ease;
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .screen {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .screen.active {
+    display: flex;
+  }
+
+  .question {
+    font-size: 25px;
+    color: #6b2c5f;
+    margin-bottom: 32px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+    width: 100%;
+    min-height: 60px;
+  }
+
+  button {
+    border: none;
+    padding: 14px 34px;
+    font-size: 17px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, left 0.25s ease, top 0.25s ease;
+  }
+
+  .yes-btn {
+    background: linear-gradient(135deg, #ff6a88, #ff99ac);
+    color: white;
+    box-shadow: 0 8px 20px rgba(255, 106, 136, 0.4);
+  }
+
+  .no-btn {
+    background: #f0f0f0;
+    color: #555;
+  }
+
+  button:hover {
+    transform: translateY(-3px) scale(1.05);
+  }
+
+  .yes-btn:hover {
+    box-shadow: 0 12px 26px rgba(255, 106, 136, 0.55);
+  }
+
+  #runawayWrap {
+    position: relative;
+    width: 100%;
+    height: 160px;
+  }
+
+  #runawayNo {
+    position: absolute;
+  }
+
+  #runawayYes {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .subtext {
+    margin-top: 16px;
+    font-size: 14px;
+    color: #a15a8f;
+    opacity: 0.85;
+  }
+
+  /* Final celebration screen */
+  .final-card {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+  }
+
+  .burst-heart {
+    font-size: 60px;
+    animation: burst 1.2s ease forwards;
+  }
+
+  @keyframes burst {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .lets-go {
+    margin-top: 20px;
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    opacity: 0;
+    animation: fadeInUp 1s ease forwards;
+    animation-delay: 0.8s;
+    text-shadow: 0 4px 20px rgba(255, 105, 180, 0.6);
+  }
+
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body id="bodyEl">
+
+  <div class="card" id="cardEl">
+
+    <!-- Screen 1: I love you, are you okay with that -->
+    <div class="screen active" id="screenLoveOk">
+      <div class="question">I love you. Are you okay with that? 💗</div>
+      <div class="buttons">
+        <button class="yes-btn" onclick="goTo('screenDoYouLoveMe')">Yes</button>
+        <button class="no-btn" onclick="goTo('screenDidIDoBad')">No</button>
+      </div>
+    </div>
+
+    <!-- Screen 2: did I do something bad -->
+    <div class="screen" id="screenDidIDoBad">
+      <div class="question">Did I do something bad? 🥺</div>
+      <div class="buttons">
+        <button class="yes-btn" onclick="goTo('screenSorry')">Yes</button>
+        <button class="no-btn" onclick="goTo('screenLoveOk')">No</button>
+      </div>
+    </div>
+
+    <!-- Screen 3: I'm sorry (crying animation) -->
+    <div class="screen" id="screenSorry">
+      <div class="question">I'm sorry 😢</div>
+      <div class="buttons">
+        <button class="yes-btn" onclick="goTo('screenLoveOk')">Yes</button>
+      </div>
+      <div class="subtext">Let's start over, okay?</div>
+    </div>
+
+    <!-- Screen 4: do you love me (runaway no button) -->
+    <div class="screen" id="screenDoYouLoveMe">
+      <div class="question">Do you love me? 💓</div>
+      <div id="runawayWrap">
+        <button class="yes-btn" id="runawayYes" onclick="handleFinalYes()">Yes</button>
+        <button class="no-btn" id="runawayNo">No</button>
+      </div>
+    </div>
+
+    <!-- Screen 5: final celebration -->
+    <div class="screen" id="screenFinal">
+      <div class="burst-heart">💖</div>
+      <div class="lets-go">Let's go 🥰</div>
+    </div>
+
+  </div>
+
+<script>
+  // ---- Screen navigation ----
+  const bodyEl = document.getElementById("bodyEl");
+  const cardEl = document.getElementById("cardEl");
+  let tearInterval = null;
+
+  function goTo(screenId) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(screenId).classList.add("active");
+
+    bodyEl.classList.remove("sad-bg", "final-bg");
+    stopTears();
+
+    if (screenId === "screenSorry") {
+      bodyEl.classList.add("sad-bg");
+      startTears();
+    }
+  }
+
+  // ---- Floating hearts background (always running, subtle) ----
+  function createHeart() {
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+    heart.textContent = ["💗", "💖", "💕", "❤️", "💓"][Math.floor(Math.random() * 5)];
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = (16 + Math.random() * 20) + "px";
+    heart.style.animationDuration = (6 + Math.random() * 6) + "s";
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 13000);
+  }
+  setInterval(createHeart, 700);
+
+  // ---- Crying tears background (only during "I'm sorry" screen) ----
+  function createTear() {
+    const tear = document.createElement("div");
+    tear.classList.add("tear");
+    tear.textContent = "💧";
+    tear.style.left = Math.random() * 100 + "vw";
+    tear.style.fontSize = (14 + Math.random() * 16) + "px";
+    tear.style.animationDuration = (3 + Math.random() * 3) + "s";
+    document.body.appendChild(tear);
+    setTimeout(() => tear.remove(), 6500);
+  }
+  function startTears() {
+    if (tearInterval) return;
+    tearInterval = setInterval(createTear, 300);
+  }
+  function stopTears() {
+    if (tearInterval) {
+      clearInterval(tearInterval);
+      tearInterval = null;
+    }
+  }
+
+  // ---- Runaway "No" button on the "Do you love me?" screen ----
+  const runawayWrap = document.getElementById("runawayWrap");
+  const runawayNo = document.getElementById("runawayNo");
+
+  function placeNoRandomly() {
+    const wrapRect = runawayWrap.getBoundingClientRect();
+    const btnW = runawayNo.offsetWidth || 100;
+    const btnH = runawayNo.offsetHeight || 50;
+    const maxX = Math.max(wrapRect.width - btnW, 0);
+    const maxY = Math.max(wrapRect.height - btnH, 0);
+    const x = Math.random() * maxX;
+    const y = Math.random() * maxY;
+    runawayNo.style.left = x + "px";
+    runawayNo.style.top = y + "px";
+  }
+
+  function initNoPosition() {
+    runawayNo.style.left = "10px";
+    runawayNo.style.top = "0px";
+  }
+  initNoPosition();
+
+  document.addEventListener("mousemove", (e) => {
+    const activeScreen = document.getElementById("screenDoYouLoveMe");
+    if (!activeScreen.classList.contains("active")) return;
+
+    const rect = runawayNo.getBoundingClientRect();
+    const btnCenterX = rect.left + rect.width / 2;
+    const btnCenterY = rect.top + rect.height / 2;
+    const dist = Math.hypot(e.clientX - btnCenterX, e.clientY - btnCenterY);
+
+    if (dist < 90) {
+      placeNoRandomly();
+    }
+  });
+
+  document.addEventListener("touchmove", (e) => {
+    const activeScreen = document.getElementById("screenDoYouLoveMe");
+    if (!activeScreen.classList.contains("active")) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const rect = runawayNo.getBoundingClientRect();
+    const btnCenterX = rect.left + rect.width / 2;
+    const btnCenterY = rect.top + rect.height / 2;
+    const dist = Math.hypot(touch.clientX - btnCenterX, touch.clientY - btnCenterY);
+
+    if (dist < 100) {
+      placeNoRandomly();
+    }
+  }, { passive: true });
+
+  // ---- Final "Let's go" celebration ----
+  function handleFinalYes() {
+    goTo('screenFinal');
+    bodyEl.classList.add('final-bg');
+    cardEl.classList.add('final-card');
+    spawnStars();
+    spawnHeartBurst();
+  }
+
+  function spawnStars() {
+    for (let i = 0; i < 40; i++) {
+      const star = document.createElement("div");
+      star.classList.add("star");
+      const size = Math.random() * 2 + 1;
+      star.style.width = size + "px";
+      star.style.height = size + "px";
+      star.style.left = Math.random() * 100 + "vw";
+      star.style.top = Math.random() * 100 + "vh";
+      star.style.animationDuration = (2 + Math.random() * 3) + "s";
+      document.body.appendChild(star);
+    }
+  }
+
+  function spawnHeartBurst() {
+    const emojis = ["💖", "💕", "💓", "💗", "❤️", "✨"];
+    for (let i = 0; i < 25; i++) {
+      setTimeout(() => {
+        const heart = document.createElement("div");
+        heart.classList.add("heart");
+        heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        heart.style.left = Math.random() * 100 + "vw";
+        heart.style.fontSize = (18 + Math.random() * 26) + "px";
+        heart.style.animationDuration = (5 + Math.random() * 5) + "s";
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 11000);
+      }, i * 120);
+    }
+  }
+</script>
+
+</body>
+</html>
