@@ -140,7 +140,7 @@
 
 <script>
   // Where "Yes" should take the user next.
-  // Update this filename when you create your next page (e.g. "question2.html")
+  // Update this filename to match whatever your next page is actually named
   const NEXT_PAGE = "question2.html";
 
   const questionText = document.getElementById("questionText");
@@ -148,12 +148,10 @@
   const subtext = document.getElementById("subtext");
 
   function handleYes() {
-    // Take the user to the next question/page
     window.location.href = NEXT_PAGE;
   }
 
   function handleNo() {
-    // Force them toward yes — only one option left
     questionText.textContent = "Are you sure? Please just say yes 🥺";
     buttonsWrap.innerHTML = '<button class="yes-btn" onclick="handleYes()">Yes</button>';
     subtext.textContent = "(there's only one right answer here)";
