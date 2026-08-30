@@ -98,8 +98,6 @@
     100% { transform: translate(0, 0); opacity: 0.3; }
   }
 
-  /* Crying emoji burst, spawned where the No button was standing
-     right before it dodges away. */
   .cry {
     position: fixed;
     font-size: 20px;
@@ -179,11 +177,12 @@
   button:hover { transform: translateY(-3px) scale(1.05); }
   .yes-btn:hover { box-shadow: 0 12px 26px rgba(255, 106, 136, 0.55); }
 
-  /* runawayWrap sits inline with Yes, so No starts right there
-     like a normal button, not off in the middle of nowhere. */
-  #runawayWrap {
-    position: relative;
+  /* Placeholder that reserves No's spot in the row while the real
+     button is off living its own life (possibly reparented to body). */
+  #runawaySlot {
     display: inline-flex;
+    width: 88px;
+    height: 49px;
   }
 
   #runawayNo {
@@ -191,8 +190,12 @@
     transition: left 0.2s ease, top 0.2s ease;
   }
 
+  /* Once escaping, it's reparented straight into <body>, so `fixed`
+     here truly means "relative to the real screen" — no blurred
+     ancestor container to get trapped inside. */
   #runawayNo.escaping {
     position: fixed;
+    z-index: 55;
   }
 
   #runawayNo:hover,
@@ -269,9 +272,7 @@
       <div class="question">Do you love me? 💓</div>
       <div class="buttons">
         <button class="yes-btn" id="runawayYes" onclick="handleFinalYes()">Yes</button>
-        <span id="runawayWrap">
-          <button class="no-btn" id="runawayNo">No</button>
-        </span>
+        <span id="runawaySlot"></span>
       </div>
     </div>
 
@@ -283,10 +284,17 @@
 
   </div>
 
+  <!-- The actual No button lives here at the body level from the
+       start, so it never inherits a filtered/blurred ancestor. -->
+  <button class="no-btn" id="runawayNo">No</button>
+
 <script>
   const bodyEl = document.getElementById("bodyEl");
   const cardEl = document.getElementById("cardEl");
   let tearInterval = null;
+
+  const runawayNo = document.getElementById("runawayNo");
+  const runawaySlot = document.getElementById("runawaySlot");
 
   function goTo(screenId) {
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -299,6 +307,8 @@
     }
     if (screenId === "screenDoYouLoveMe") {
       resetNoButton();
+    } else {
+      runawayNo.style.display = "none";
     }
   }
 
@@ -332,14 +342,22 @@
     if (tearInterval) { clearInterval(tearInterval); tearInterval = null; }
   }
 
-  const runawayNo = document.getElementById("runawayNo");
-
-  const TRIGGER_RADIUS = 90;   // how close before it dodges
-  const MAX_JUMP = 130;        // dodge distance — short, not screen-spanning
+  const TRIGGER_RADIUS = 90;
+  const MAX_JUMP = 130;
   const MARGIN = 16;
 
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
+  }
+
+  // Reflect a coordinate back inward if it overshoots an edge,
+  // instead of just pinning it flat against the wall.
+  function bounce(pos, size, viewportSize) {
+    const minPos = MARGIN;
+    const maxPos = viewportSize - size - MARGIN;
+    if (pos < minPos) pos = minPos + (minPos - pos);
+    if (pos > maxPos) pos = maxPos - (pos - maxPos);
+    return clamp(pos, minPos, maxPos);
   }
 
   function getViewportSize() {
@@ -351,10 +369,19 @@
   }
 
   function resetNoButton() {
-    // Put it back inline, right next to Yes, like a normal button.
+    runawayNo.style.display = "";
     runawayNo.classList.remove("escaping");
     runawayNo.style.left = "";
     runawayNo.style.top = "";
+    // Park it right where the slot is, sitting inline next to Yes.
+    const slotRect = runawaySlot.getBoundingClientRect();
+    runawayNo.style.position = "fixed";
+    runawayNo.style.left = slotRect.left + "px";
+    runawayNo.style.top = slotRect.top + "px";
+    // Force layout, then drop the fixed position — from here on it's
+    // simply parked at those exact screen coordinates until it dodges.
+    void runawayNo.offsetWidth;
+    runawayNo.classList.add("escaping");
   }
 
   function isDoYouLoveMeActive() {
@@ -362,8 +389,7 @@
   }
 
   function spawnCryBurst(x, y) {
-    const count = 6;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < 6; i++) {
       const cry = document.createElement("div");
       cry.classList.add("cry");
       cry.textContent = "😭";
@@ -380,29 +406,25 @@
   }
 
   function dodge(clientX, clientY) {
+    if (runawayNo.style.display === "none") return;
     const rect = runawayNo.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     const dist = Math.hypot(clientX - centerX, clientY - centerY);
     if (dist >= TRIGGER_RADIUS) return;
 
-    // Cry emojis burst from where it currently is, right before it moves.
     spawnCryBurst(centerX, centerY);
 
-    // Freeze current position in fixed coords, then jump a short,
-    // bounded distance away from the cursor.
     const { width, height } = getViewportSize();
     const btnW = rect.width;
     const btnH = rect.height;
 
-    // Direction: away from the cursor.
     let dx = centerX - clientX;
     let dy = centerY - clientY;
     const mag = Math.hypot(dx, dy) || 1;
     dx /= mag;
     dy /= mag;
 
-    // Add some randomness so it doesn't always flee in a straight line.
     const angleJitter = (Math.random() - 0.5) * 1.2;
     const cos = Math.cos(angleJitter), sin = Math.sin(angleJitter);
     const jdx = dx * cos - dy * sin;
@@ -412,10 +434,10 @@
     let newX = rect.left + jdx * jumpDist;
     let newY = rect.top + jdy * jumpDist;
 
-    newX = clamp(newX, MARGIN, width - btnW - MARGIN);
-    newY = clamp(newY, MARGIN, height - btnH - MARGIN);
+    // Bounce back inward at every edge instead of leaving the screen.
+    newX = bounce(newX, btnW, width);
+    newY = bounce(newY, btnH, height);
 
-    runawayNo.classList.add("escaping");
     runawayNo.style.left = newX + "px";
     runawayNo.style.top = newY + "px";
   }
@@ -434,6 +456,15 @@
 
   runawayNo.addEventListener("mouseenter", (e) => {
     if (isDoYouLoveMeActive()) dodge(e.clientX, e.clientY);
+  });
+
+  window.addEventListener("resize", () => {
+    if (isDoYouLoveMeActive()) {
+      const rect = runawayNo.getBoundingClientRect();
+      const { width, height } = getViewportSize();
+      runawayNo.style.left = bounce(rect.left, rect.width, width) + "px";
+      runawayNo.style.top = bounce(rect.top, rect.height, height) + "px";
+    }
   });
 
   function handleFinalYes() {
