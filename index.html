@@ -5,11 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>For You</title>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     min-height: 100vh;
@@ -35,7 +31,6 @@
     100% { background-position: 0% 50%; }
   }
 
-  /* floating hearts */
   .heart {
     position: absolute;
     bottom: -50px;
@@ -47,14 +42,8 @@
   }
 
   @keyframes floatUp {
-    0% {
-      transform: translateY(0) rotate(0deg);
-      opacity: 0.8;
-    }
-    100% {
-      transform: translateY(-110vh) rotate(360deg);
-      opacity: 0;
-    }
+    0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+    100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
   }
 
   .card {
@@ -95,7 +84,6 @@
     padding: 14px 34px;
     font-size: 17px;
     border-radius: 50px;
-    cursor: pointer;
     font-weight: 600;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
@@ -139,8 +127,6 @@
   </div>
 
 <script>
-  // Where "Yes" should take the user next.
-  // Update this filename to match whatever your next page is actually named
   const NEXT_PAGE = "question2.html";
 
   const questionText = document.getElementById("questionText");
@@ -157,7 +143,6 @@
     subtext.textContent = "(there's only one right answer here)";
   }
 
-  // Floating hearts background effect
   function createHeart() {
     const heart = document.createElement("div");
     heart.classList.add("heart");
